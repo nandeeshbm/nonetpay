@@ -27,6 +27,7 @@ export async function registerRoutes() {
 	const balanceModule = await import("./routes/balance.js").catch(() => ({}));
 	const vouchersModule = await import("./routes/vouchers.js").catch(() => ({}));
 	const merchantModule = await import("./routes/merchant.js").catch(() => ({}));
+	const keysModule = await import("./routes/keys.js").catch(() => ({}));
 	const transactionsModule = await import("./routes/transactions.js").catch(() => ({}));
 	const paymentsModule = await import("./routes/payments.js").catch(() => ({}));
 	const adminModule = await import("./routes/admin.js").catch(() => ({}));
@@ -36,6 +37,7 @@ export async function registerRoutes() {
 	const balanceRoutes = balanceModule.default || createEmptyRouter();
 	const vouchersRoutes = vouchersModule.default || createEmptyRouter();
 	const merchantRoutes = merchantModule.default || createEmptyRouter();
+	const keysRoutes = keysModule.default || createEmptyRouter();
 	const transactionsRoutes = transactionsModule.default || createEmptyRouter();
 	const paymentsRoutes = paymentsModule.default || createEmptyRouter();
 	const adminRoutes = adminModule.default || createEmptyRouter();
@@ -53,6 +55,7 @@ export async function registerRoutes() {
 	app.use("/api", balanceRoutes);
 	app.use("/api", vouchersRoutes);
 	app.use("/api", merchantRoutes);
+	app.use("/api", keysRoutes);
 	app.use("/api", transactionsRoutes);
 	app.use("/api", paymentsRoutes);
 	app.use("/api", aiRoutes);

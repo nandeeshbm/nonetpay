@@ -18,6 +18,11 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { API_BASE_URL } from "../../lib/api";
+import {
+  loadTrustedKeysMeta,
+  loadTrustedUserKeys,
+  refreshTrustedUserKeys,
+} from "../../lib/trustedKeys";
 import { Ionicons } from "@expo/vector-icons";
 import * as Updates from "expo-updates";
 
@@ -84,6 +89,11 @@ export default function MerchantSettingsScreen() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // ─── Trusted keys state ─────────────────────────────────────────
+  const [trustedCount, setTrustedCount] = useState(0);
+  const [trustedUpdatedAt, setTrustedUpdatedAt] = useState<string | null>(null);
+  const [refreshingKeys, setRefreshingKeys] = useState(false);
+
   // ─── FAQ state ─────────────────────────────────────────────────
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,6 +101,13 @@ export default function MerchantSettingsScreen() {
   // ─── OTA Update state ─────────────────────────────────
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<"idle" | "available" | "uptodate" | "error">("idle");
+
+  const loadTrustedInfo = async () => {
+    const keys = await loadTrustedUserKeys();
+    setTrustedCount(keys.length);
+    const meta = await loadTrustedKeysMeta();
+    setTrustedUpdatedAt(meta?.updatedAt || null);
+  };
 
   useEffect(() => {
     (async () => {
@@ -105,6 +122,7 @@ export default function MerchantSettingsScreen() {
         setPhone(m.phone || "");
         setMerchantId(m.merchantId || "");
       }
+      await loadTrustedInfo();
       setLoading(false);
     })();
   }, []);
@@ -194,6 +212,40 @@ export default function MerchantSettingsScreen() {
   const toggleFaq = (i: number) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setOpenFaq(openFaq === i ? null : i);
+  };
+
+  const formatUpdatedAt = (value: string | null) => {
+    if (!value) return "Not synced yet";
+    const date = new Date(value);
+    return date.toLocaleString("en-IN", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const handleRefreshKeys = async () => {
+    if (refreshingKeys) return;
+    const token = await AsyncStorage.getItem("@auth_token");
+    if (!token) {
+      Alert.alert("Error", "Please login again to refresh keys.");
+      return;
+    }
+    try {
+      setRefreshingKeys(true);
+      const meta = await refreshTrustedUserKeys(token);
+      setTrustedCount(meta.count);
+      setTrustedUpdatedAt(meta.updatedAt);
+      Alert.alert("Trusted keys updated", `Downloaded ${meta.count} user keys.`);
+    } catch (error: any) {
+      Alert.alert(
+        "Refresh failed",
+        error?.message || "Could not refresh trusted keys. Try again when online."
+      );
+    } finally {
+      setRefreshingKeys(false);
+    }
   };
 
   // ─── OTA Update check ─────────────────────────────────
@@ -406,6 +458,26 @@ export default function MerchantSettingsScreen() {
           <InfoRow icon="shield-outline" label="Signature Scheme" value="ECDSA secp256k1" />
           <View style={styles.divider} />
           <InfoRow icon="cloud-done-outline" label="Sync" value="Auto when online" />
+          <View style={styles.divider} />
+          <View style={styles.keysRow}>
+            <View style={styles.keysLeft}>
+              <Text style={styles.keysLabel}>Trusted user keys</Text>
+              <Text style={styles.keysSub}>
+                {trustedCount} keys · {formatUpdatedAt(trustedUpdatedAt)}
+              </Text>
+            </View>
+            <Pressable
+              style={[styles.keysBtn, refreshingKeys && styles.btnDisabled]}
+              onPress={handleRefreshKeys}
+              disabled={refreshingKeys}
+            >
+              {refreshingKeys ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.keysBtnText}>Refresh Keys</Text>
+              )}
+            </Pressable>
+          </View>
         </View>
 
         {/* ══ SECTION: HELP & SUPPORT ═══════════════════════════════ */}
@@ -716,6 +788,20 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "#bbf7d0",
   },
   infoBadgeText: { color: "#15803d", fontSize: 12, fontWeight: "700" },
+
+  keysRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  keysLeft: { flex: 1, marginRight: 12 },
+  keysLabel: { fontSize: 14, fontWeight: "700", color: "#111827" },
+  keysSub: { fontSize: 12, color: "#6b7280", marginTop: 4 },
+  keysBtn: {
+    backgroundColor: "#059669",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    alignItems: "center",
+    minWidth: 110,
+  },
+  keysBtnText: { color: "#fff", fontSize: 12, fontWeight: "700" },
 
   faqQuestion: {
     flexDirection: "row", alignItems: "center",

@@ -17,6 +17,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { API_BASE_URL } from '../lib/api';
+import { ensureTrustedUserKeys } from '../lib/trustedKeys';
 
 export default function MerchantLoginScreen() {
   const [phone, setPhone] = useState('');
@@ -52,6 +53,14 @@ export default function MerchantLoginScreen() {
       await AsyncStorage.setItem('@auth_token', data.token);
       await AsyncStorage.setItem('@merchant_data', JSON.stringify(data.merchant));
       await AsyncStorage.setItem('@merchant_id', data.merchant.merchantId);
+      try {
+        await ensureTrustedUserKeys(data.token);
+      } catch (error: any) {
+        Alert.alert(
+          'Trusted keys not synced',
+          error?.message || 'Go online and refresh keys from Settings before scanning vouchers.'
+        );
+      }
       router.replace('/merchant/home');
     } catch {
       Alert.alert('Connection Error', 'Cannot connect to server. Make sure the backend is running.');
