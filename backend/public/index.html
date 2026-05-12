@@ -1,280 +1,445 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>NONETPAY — Pay Without Internet</title>
-  <meta name="description" content="Secure offline-first payments using cryptographically signed vouchers."/>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-  <style>
-    body { font-family:'Inter',sans-serif; }
-    /* word cycling */
-    .word { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-            transition:all 0.55s cubic-bezier(.4,0,.2,1); }
-    .word.active { opacity:1; transform:translateY(0); }
-    .word.above  { opacity:0; transform:translateY(-100%); pointer-events:none; }
-    .word.below  { opacity:0; transform:translateY(100%);  pointer-events:none; }
-    .card { transition:all .25s ease; }
-    .card:hover { transform:translateY(-5px); box-shadow:0 20px 60px rgba(124,111,255,0.12); }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>NONETPAY &mdash; Pay Without Internet</title>
+<meta name="description" content="Secure offline-first payments using cryptographically signed vouchers. Pay merchants without internet."/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
 </head>
-<body class="bg-white text-gray-900 overflow-x-hidden">
+<body>
 
-<!-- NAV -->
-<nav class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-  <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-2.5">
-      <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center font-black text-white text-sm">N</div>
-      <span class="font-extrabold text-lg">NONETPAY</span>
-    </div>
-    <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
-      <a href="#features" class="hover:text-violet-600 transition-colors">Features</a>
-      <a href="#how" class="hover:text-violet-600 transition-colors">How It Works</a>
-      <a href="#api" class="hover:text-violet-600 transition-colors">API</a>
-      <a href="#download" class="hover:text-violet-600 transition-colors">Download</a>
-      <a href="https://github.com/mujju-212/nonetpay" target="_blank" class="hover:text-violet-600 transition-colors flex items-center gap-1"><i data-lucide="github" class="w-4 h-4"></i> GitHub</a>
-    </div>
-    <a href="#download" class="bg-gradient-to-r from-violet-600 to-indigo-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl hover:opacity-90 transition-all hover:-translate-y-0.5 shadow-md shadow-violet-200">
-      Get App
-    </a>
+<nav>
+<div class="nav-inner">
+  <a href="/" class="nav-logo"><div class="logo-mark">N</div>NONETPAY</a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#app">App</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#download">Download</a></li>
+    <li><a href="https://github.com/mujju-212/nonetpay" target="_blank">GitHub</a></li>
+  </ul>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="themeIcon"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <a href="#download" class="btn-cta">Get App</a>
   </div>
+</div>
 </nav>
 
-<!-- HERO -->
-<section class="min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-16 bg-gradient-to-b from-white via-violet-50/30 to-white relative overflow-hidden">
-  <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full opacity-30" style="background:radial-gradient(ellipse,#7c6fff22 0%,transparent 70%)"></div>
-
-  <!-- badge -->
-  <div class="inline-flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-full px-4 py-2 text-sm text-violet-700 font-semibold mb-10">
-    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-    Read our launch article
-    <i data-lucide="arrow-right" class="w-4 h-4"></i>
-  </div>
-
-  <!-- heading -->
-  <h1 class="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight text-center leading-[1.05] mb-6 max-w-4xl">
-    <span class="text-gray-900">Pay. Offline.</span><br/>
-    <!-- animated word row -->
-    <span class="relative block overflow-hidden" style="height:1.15em">
-      <span class="word below bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">No Internet.</span>
-      <span class="word below bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Zero Data.</span>
-      <span class="word below bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Anywhere.</span>
-      <span class="word below bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Always.</span>
-      <span class="word below bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Securely.</span>
-    </span>
-  </h1>
-
-  <p class="text-lg md:text-xl text-gray-500 max-w-2xl text-center leading-relaxed mb-10">
-    Managing payments without connectivity is already tough. NONETPAY uses cryptographically signed vouchers to make offline transactions as simple and safe as online ones.
-  </p>
-
-  <div class="flex flex-wrap gap-4 justify-center mb-20">
-    <a href="tel:+919999999999" class="inline-flex items-center gap-2 border border-gray-200 bg-white text-gray-700 font-semibold px-7 py-3.5 rounded-xl text-sm hover:border-violet-300 hover:bg-violet-50 transition-all shadow-sm">
-      <i data-lucide="phone-call" class="w-4 h-4"></i> Jump on a call
-    </a>
-    <a href="#download" class="inline-flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-700 text-white font-bold px-7 py-3.5 rounded-xl text-sm hover:opacity-90 transition-all shadow-lg shadow-violet-200">
-      Download APK <i data-lucide="move-right" class="w-4 h-4"></i>
-    </a>
-  </div>
-
-  <!-- stats -->
-  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl w-full">
-    <div class="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm">
-      <div class="text-2xl font-black text-violet-600">₹5,000</div>
-      <div class="text-xs text-gray-400 font-medium mt-1">Wallet Limit</div>
-    </div>
-    <div class="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm">
-      <div class="text-2xl font-black text-violet-600">₹1,000</div>
-      <div class="text-xs text-gray-400 font-medium mt-1">Per Transaction</div>
-    </div>
-    <div class="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm">
-      <div class="text-2xl font-black text-violet-600">ECDSA</div>
-      <div class="text-xs text-gray-400 font-medium mt-1">Cryptography</div>
-    </div>
-    <div class="bg-white border border-gray-100 rounded-2xl p-5 text-center shadow-sm">
-      <div class="text-2xl font-black text-violet-600">100%</div>
-      <div class="text-xs text-gray-400 font-medium mt-1">Offline Capable</div>
-    </div>
-  </div>
-</section>
-
-<!-- FEATURES -->
-<section id="features" class="py-24 px-6 max-w-6xl mx-auto">
-  <div class="text-center mb-16">
-    <p class="text-violet-600 text-xs font-bold tracking-widest uppercase mb-3">Why NONETPAY</p>
-    <h2 class="text-4xl md:text-5xl font-black tracking-tight text-gray-900">Built for the Real World</h2>
-    <p class="text-gray-500 text-lg mt-4 max-w-xl mx-auto">Where networks fail, NONETPAY keeps transactions flowing.</p>
-  </div>
-  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-violet-50 flex items-center justify-center mb-5"><i data-lucide="wifi-off" class="w-5 h-5 text-violet-600"></i></div>
-      <h3 class="font-bold mb-2">100% Offline Payments</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Generate and receive signed vouchers with zero internet. Sync later when connectivity returns.</p>
-    </div>
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center mb-5"><i data-lucide="shield-check" class="w-5 h-5 text-green-600"></i></div>
-      <h3 class="font-bold mb-2">Cryptographic Security</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Every voucher signed with ECDSA secp256k1 — same cryptography as Bitcoin. Impossible to forge.</p>
-    </div>
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center mb-5"><i data-lucide="qr-code" class="w-5 h-5 text-blue-600"></i></div>
-      <h3 class="font-bold mb-2">QR Code Payments</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Scan merchant QR to pay instantly. Works even with airplane mode on both devices.</p>
-    </div>
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center mb-5"><i data-lucide="refresh-cw" class="w-5 h-5 text-orange-600"></i></div>
-      <h3 class="font-bold mb-2">Auto Background Sync</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Transactions queue locally and sync automatically the moment internet is restored.</p>
-    </div>
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-red-50 flex items-center justify-center mb-5"><i data-lucide="ban" class="w-5 h-5 text-red-500"></i></div>
-      <h3 class="font-bold mb-2">No Double Spend</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Each voucher has a unique ID. Server rejects duplicates — even if presented multiple times offline.</p>
-    </div>
-    <div class="card bg-white border border-gray-100 rounded-2xl p-7 shadow-sm">
-      <div class="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center mb-5"><i data-lucide="brain-circuit" class="w-5 h-5 text-purple-600"></i></div>
-      <h3 class="font-bold mb-2">AI Spending Insights</h3>
-      <p class="text-gray-500 text-sm leading-relaxed">Built-in AI analyzes spending patterns and gives smart financial suggestions in natural language.</p>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section id="how" class="py-24 px-6 bg-gray-50 border-y border-gray-100">
-  <div class="max-w-3xl mx-auto">
-    <div class="text-center mb-14">
-      <p class="text-violet-600 text-xs font-bold tracking-widest uppercase mb-3">The Flow</p>
-      <h2 class="text-4xl md:text-5xl font-black tracking-tight text-gray-900">How It Works</h2>
-      <p class="text-gray-500 text-lg mt-4">Four steps. Entirely offline.</p>
-    </div>
-    <div class="space-y-0 bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden divide-y divide-gray-100">
-      <div class="flex gap-5 p-7">
-        <div class="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center font-black text-white text-sm flex-shrink-0">1</div>
-        <div><h3 class="font-bold mb-1">Add Balance Online</h3><p class="text-gray-500 text-sm">Top up wallet via Razorpay (UPI, cards). Balance cached locally.</p></div>
-      </div>
-      <div class="flex gap-5 p-7">
-        <div class="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center font-black text-white text-sm flex-shrink-0">2</div>
-        <div><h3 class="font-bold mb-1">Pay Offline via QR</h3><p class="text-gray-500 text-sm">Scan merchant QR → signed voucher generated → balance deducted locally. No internet needed.</p></div>
-      </div>
-      <div class="flex gap-5 p-7">
-        <div class="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center font-black text-white text-sm flex-shrink-0">3</div>
-        <div><h3 class="font-bold mb-1">Merchant Accepts</h3><p class="text-gray-500 text-sm">Merchant scans voucher QR and stores it. When either reconnects, it syncs and merchant is credited.</p></div>
-      </div>
-      <div class="flex gap-5 p-7">
-        <div class="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center flex-shrink-0"><i data-lucide="check" class="w-5 h-5 text-white"></i></div>
-        <div><h3 class="font-bold mb-1">Server Verifies & Settles</h3><p class="text-gray-500 text-sm">Backend verifies ECDSA signature, rejects duplicates, and settles — guaranteeing end-to-end integrity.</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- API -->
-<section id="api" class="py-24 px-6">
-  <div class="max-w-4xl mx-auto">
-    <div class="text-center mb-12">
-      <p class="text-violet-600 text-xs font-bold tracking-widest uppercase mb-3">For Developers</p>
-      <h2 class="text-4xl md:text-5xl font-black tracking-tight text-gray-900">Backend API</h2>
-      <p class="text-gray-500 text-lg mt-4">RESTful JSON API powering the NONETPAY mobile apps.</p>
-    </div>
-    <div class="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
-      <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-3">Base URL</p>
-      <div class="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-xl p-4 mb-4">
-        <i data-lucide="link" class="w-4 h-4 text-violet-600 flex-shrink-0"></i>
-        <span class="font-mono text-violet-700 text-sm flex-1 break-all">https://nonetpay.onrender.com</span>
-        <button onclick="copyUrl()" id="copyBtn" class="bg-violet-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-violet-700 transition-colors whitespace-nowrap">Copy</button>
-      </div>
-      <div id="statusPill" class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-2 rounded-lg mb-6">
-        <i data-lucide="loader" class="w-3 h-3 animate-spin"></i> Checking server…
-      </div>
-      <p class="text-xs text-gray-400 font-bold uppercase tracking-widest mb-3">Key Endpoints</p>
-      <div class="space-y-2 font-mono text-sm">
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-green-600 font-bold w-12">GET</span><span class="text-gray-600">/api/health</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-blue-600 font-bold w-12">POST</span><span class="text-gray-600">/api/register &amp; /api/login</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-green-600 font-bold w-12">GET</span><span class="text-gray-600">/api/balance</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-blue-600 font-bold w-12">POST</span><span class="text-gray-600">/api/vouchers/redeem</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-green-600 font-bold w-12">GET</span><span class="text-gray-600">/api/transactions</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-blue-600 font-bold w-12">POST</span><span class="text-gray-600">/api/payments/create-order</span></div>
-        <div class="flex gap-3 bg-gray-50 rounded-lg px-4 py-3 border border-gray-100"><span class="text-blue-600 font-bold w-12">POST</span><span class="text-gray-600">/api/ai/insights</span></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- DOWNLOAD -->
-<section id="download" class="py-24 px-6 bg-gradient-to-br from-violet-600 to-indigo-700">
-  <div class="max-w-3xl mx-auto text-center">
-    <p class="text-violet-200 text-xs font-bold tracking-widest uppercase mb-4">Get The App</p>
-    <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">Download NONETPAY</h2>
-    <p class="text-violet-200 text-lg mb-10 max-w-md mx-auto">Install directly — no Play Store needed. Enable "Install unknown apps" and you're ready to go.</p>
-    <div class="flex flex-wrap gap-4 justify-center">
-      <a href="https://expo.dev/accounts/ashleshs/projects/offline-pay/builds" target="_blank"
-         class="inline-flex items-center gap-2 bg-white text-violet-700 font-bold px-8 py-4 rounded-2xl text-base hover:bg-violet-50 transition-all hover:-translate-y-1 shadow-xl">
-        <i data-lucide="smartphone" class="w-5 h-5"></i> Download Android APK
+<section class="hero">
+<div class="hero-glow"></div><div class="hero-glow2"></div>
+<div class="hero-inner">
+  <div class="hero-content">
+    <div class="hero-badge"><span class="badge-dot"></span>Now live &mdash; v1.0.1 &middot; Android 8.0+</div>
+    <h1>Pay. Offline.<br/>
+      <span class="word-wrap">
+        <span class="word below highlight">No Internet.</span>
+        <span class="word below highlight">Zero Data.</span>
+        <span class="word below highlight">Anywhere.</span>
+        <span class="word below highlight">Always.</span>
+        <span class="word below highlight">Securely.</span>
+      </span>
+    </h1>
+    <p class="hero-sub">NONETPAY lets users and merchants transact even with zero connectivity &mdash; using cryptographically signed vouchers backed by ECDSA secp256k1. Same security as Bitcoin.</p>
+    <div class="hero-btns">
+      <a href="#download" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download APK
       </a>
-      <a href="/admin" class="inline-flex items-center gap-2 border-2 border-white/30 text-white font-semibold px-8 py-4 rounded-2xl text-base hover:bg-white/10 transition-all hover:-translate-y-1">
-        <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Admin Dashboard
+      <a href="tel:+919999999999" class="btn-outline">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.39 2 2 0 0 1 3.58 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.73a16 16 0 0 0 6.29 6.29l1.91-1.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Jump on a call
       </a>
     </div>
-    <p class="text-violet-300 text-sm mt-8">v1.0.1 · Android 8.0+ · Built with Expo EAS</p>
+    <div class="hero-stats">
+      <div class="stat"><div class="stat-val">Rs.<span>5,000</span></div><div class="stat-label">Wallet Limit</div></div>
+      <div class="stat"><div class="stat-val">Rs.<span>1,000</span></div><div class="stat-label">Per Transaction</div></div>
+      <div class="stat"><div class="stat-val"><span>ECDSA</span></div><div class="stat-label">Cryptography</div></div>
+      <div class="stat"><div class="stat-val"><span>100%</span></div><div class="stat-label">Offline Capable</div></div>
+    </div>
   </div>
+  <div class="phone-wrap">
+    <div class="phone-float top">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      ECDSA Signed
+    </div>
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="phone-header"><span class="phone-brand">NONETPAY</span><div class="phone-avatar"></div></div>
+        <div class="phone-balance-label">Available Balance</div>
+        <div class="phone-balance">Rs.4,842<small style="font-size:.75rem">.00</small></div>
+        <div class="phone-status">&#9679; Offline Ready</div>
+        <div class="phone-cards-row">
+          <div class="phone-card user"><div class="phone-card-icon">&#128100;</div><div class="phone-card-label">User Pay</div></div>
+          <div class="phone-card merchant"><div class="phone-card-icon">&#127978;</div><div class="phone-card-label">Merchant</div></div>
+        </div>
+        <div class="phone-tx">
+          <div class="phone-tx-title">Recent</div>
+          <div class="phone-tx-row"><span class="phone-tx-name">Chai Stall</span><span class="phone-tx-amt out">-Rs.40</span></div>
+          <div class="phone-tx-row"><span class="phone-tx-name">Wallet Top-up</span><span class="phone-tx-amt in">+Rs.500</span></div>
+          <div class="phone-tx-row"><span class="phone-tx-name">Grocery Store</span><span class="phone-tx-amt out">-Rs.220</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-float bottom">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Synced when online
+    </div>
+  </div>
+</div>
 </section>
 
-<!-- FOOTER -->
-<footer class="border-t border-gray-100 px-6 py-8 bg-white">
-  <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-    <div class="flex items-center gap-2">
-      <div class="w-6 h-6 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-700 flex items-center justify-center text-white text-xs font-black">N</div>
-      <span><strong class="text-gray-700">NONETPAY</strong> · Built by <a href="mailto:ashleshskumar12@gmail.com" class="text-violet-600 hover:underline">Quantrix</a></span>
+<section id="features" class="features-bg">
+<div class="section-inner">
+  <div class="section-header center">
+    <p class="section-tag">Why NONETPAY</p>
+    <h2 class="section-title">Built for the Real World</h2>
+    <p class="section-sub">Where networks fail, NONETPAY keeps transactions flowing &mdash; instantly, securely, without data.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.56 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></div>
+      <div class="feat-title">100% Offline Payments</div>
+      <p class="feat-desc">Generate and receive signed vouchers with zero internet. Balance is cached locally and synced the moment connectivity returns.</p>
     </div>
-    <div class="flex gap-6">
-      <a href="/api/health" class="hover:text-violet-600 transition-colors flex items-center gap-1"><i data-lucide="activity" class="w-3 h-3"></i> Health</a>
-      <a href="/admin" class="hover:text-violet-600 transition-colors flex items-center gap-1"><i data-lucide="settings" class="w-3 h-3"></i> Admin</a>
-      <a href="https://github.com/mujju-212/nonetpay" target="_blank" class="hover:text-violet-600 transition-colors flex items-center gap-1"><i data-lucide="github" class="w-3 h-3"></i> GitHub</a>
-      <a href="mailto:ashleshskumar12@gmail.com" class="hover:text-violet-600 transition-colors flex items-center gap-1"><i data-lucide="mail" class="w-3 h-3"></i> Support</a>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="feat-title">Cryptographic Security</div>
+      <p class="feat-desc">Every voucher signed with ECDSA secp256k1 &mdash; same cryptography as Bitcoin. Impossible to forge, tamper with, or replay.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+      <div class="feat-title">QR Code Payments</div>
+      <p class="feat-desc">Scan merchant QR to pay instantly. Works even with airplane mode on both devices &mdash; no NFC, no Bluetooth required.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></div>
+      <div class="feat-title">Auto Background Sync</div>
+      <p class="feat-desc">Transactions queue locally and sync automatically the moment internet is restored &mdash; no manual action from user or merchant.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
+      <div class="feat-title">No Double Spend</div>
+      <p class="feat-desc">Each voucher has a unique cryptographic ID. Server rejects duplicates &mdash; even if the same voucher is presented multiple times offline.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"/><circle cx="12" cy="12" r="3"/></svg></div>
+      <div class="feat-title">AI Spending Insights</div>
+      <p class="feat-desc">Built-in Gemini AI analyzes spending patterns, gives personalized financial tips, and answers queries in plain natural language.</p>
     </div>
   </div>
+</div>
+</section>
+
+<section id="how">
+<div class="section-inner">
+  <div class="section-header">
+    <p class="section-tag">The Flow</p>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Four steps. Entirely offline. End-to-end cryptographic integrity guaranteed.</p>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Add Balance Online (Once)</h3>
+        <p>Top up your NONETPAY wallet via Razorpay &mdash; UPI, debit/credit cards supported. Balance is encrypted and cached on your device, ready for offline use anytime.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>User Scans Merchant QR &mdash; No Internet</h3>
+        <p>Open NONETPAY, tap Pay, scan the merchant's static QR code. The app generates a unique ECDSA-signed payment voucher and deducts balance locally &mdash; entirely offline.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Merchant Scans the Voucher QR</h3>
+        <p>User shows the signed voucher QR. Merchant scans and stores it offline. When either party reconnects, the voucher is automatically submitted and queued for settlement.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num done">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="step-body">
+        <h3>Server Verifies &amp; Settles Instantly</h3>
+        <p>Backend verifies the ECDSA signature, checks for duplicates, deducts from user balance, and credits the merchant &mdash; guaranteeing end-to-end integrity.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="app" class="app-flow-bg">
+<div class="section-inner">
+  <div class="section-header center">
+    <p class="section-tag">See It In Action</p>
+    <h2 class="section-title">Real App. Real Screens.</h2>
+    <p class="section-sub">From wallet top-up to offline payment to merchant settlement &mdash; here's exactly what the NONETPAY experience looks like.</p>
+  </div>
+  <div class="app-phones-row">
+
+    <!-- Phone 1: User Dashboard -->
+    <div class="app-phone-card">
+      <p class="app-phone-label">&#x31;. User Dashboard</p>
+      <div class="ap-frame">
+        <div class="ap-notch"></div>
+        <div class="ap-screen">
+          <div class="ap-header">
+            <div><div class="ap-greeting">Good morning,</div><div class="ap-name">Ashlesh S &#x1F44B;</div></div>
+            <div class="ap-avatar">A</div>
+          </div>
+          <div class="ap-wallet">
+            <div class="ap-wallet-label">Wallet Balance</div>
+            <div class="ap-wallet-bal">Rs.4,842.00</div>
+            <div class="ap-wallet-row">
+              <div class="ap-offline-badge">&#x1F512; Offline Wallet</div>
+              <div class="ap-add-btn">+ Add Money</div>
+            </div>
+          </div>
+          <div class="ap-actions">
+            <div class="ap-action"><div class="ap-action-icon">&#x1F4B3;</div><div class="ap-action-label">Pay</div></div>
+            <div class="ap-action"><div class="ap-action-icon">&#x1F4CB;</div><div class="ap-action-label">History</div></div>
+            <div class="ap-action"><div class="ap-action-icon">&#x1F4B0;</div><div class="ap-action-label">Add Money</div></div>
+            <div class="ap-action"><div class="ap-action-icon">&#x1F464;</div><div class="ap-action-label">Profile</div></div>
+            <div class="ap-action"><div class="ap-action-icon">&#x2728;</div><div class="ap-action-label">Insights</div></div>
+            <div class="ap-action"><div class="ap-action-icon">&#x1F4AC;</div><div class="ap-action-label">AI Support</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone 2: Pay Merchant -->
+    <div class="app-phone-card">
+      <p class="app-phone-label">&#x32;. Scan &amp; Pay</p>
+      <div class="ap-frame">
+        <div class="ap-notch"></div>
+        <div class="ap-screen">
+          <div class="ap-pay-header">
+            <div class="ap-back">&#x2190;</div>
+            <div class="ap-screen-title">&#x1F4B3; Pay Merchant</div>
+          </div>
+          <div class="ap-pay-bal">
+            <div class="ap-pay-bal-label">Available Balance</div>
+            <div class="ap-pay-bal-val">Rs.4,842</div>
+          </div>
+          <div style="padding:0 10px 6px;font-size:.58rem;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:6px">
+            <span style="width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#7c6fff,#4f46e5);color:#fff;font-size:.5rem;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</span>
+            Scan Merchant QR Code
+          </div>
+          <div class="ap-qr-wrap">
+            <div class="ap-qr-inner"></div>
+          </div>
+          <div class="ap-qr-hint">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Point camera at merchant's QR code
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone 3: Merchant Dashboard -->
+    <div class="app-phone-card">
+      <p class="app-phone-label">&#x33;. Merchant Receives</p>
+      <div class="ap-frame">
+        <div class="ap-notch"></div>
+        <div class="ap-screen">
+          <div class="ap-merch-stats">
+            <div class="ap-merch-stat"><div class="ap-merch-stat-val">Rs.20</div><div class="ap-merch-stat-label">Total Earned</div></div>
+            <div class="ap-merch-stat"><div class="ap-merch-stat-val" style="color:#f59e0b">1</div><div class="ap-merch-stat-label">Pending Sync</div></div>
+            <div class="ap-merch-stat"><div class="ap-merch-stat-val" style="color:var(--green)">0</div><div class="ap-merch-stat-label">Verified</div></div>
+          </div>
+          <div class="ap-merch-qr-wrap">
+            <div class="ap-merch-qr-title">&#x1F4F2; Your Payment QR</div>
+            <div class="ap-qr-block">
+              <div class="ap-qr-grid" id="qrGrid"></div>
+            </div>
+          </div>
+          <div class="ap-mid">M_1772468694343</div>
+          <div class="ap-sync-warn">&#x26A0; 1 voucher waiting to sync</div>
+          <div class="ap-sync-btn">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Sync 1 Pending Voucher
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone 4: Payment Verified -->
+    <div class="app-phone-card">
+      <p class="app-phone-label">&#x2713;. Verified &amp; Settled</p>
+      <div class="ap-frame">
+        <div class="ap-notch"></div>
+        <div class="ap-screen">
+          <div class="ap-verified-wrap">
+            <div class="ap-check-circle">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="ap-verified-title">Payment Verified</div>
+            <div class="ap-tx-row"><span class="ap-tx-key">Transaction</span><span class="ap-tx-val">Rs.4,842.00</span></div>
+            <div class="ap-tx-row"><span class="ap-tx-key">Details</span><span class="ap-tx-val green">Completed</span></div>
+            <div class="ap-tx-row"><span class="ap-tx-key">Merchant ID</span><span class="ap-tx-val" style="font-size:.44rem">M_1772468694343</span></div>
+            <div class="ap-tx-row"><span class="ap-tx-key">Amount</span><span class="ap-tx-val">Rs.4,842.00</span></div>
+            <div class="ap-tx-row"><span class="ap-tx-key">Settlement</span><span class="ap-tx-val green">Completed</span></div>
+            <div class="ap-ecdsa-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ECDSA signature verified
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="flow-steps">
+    <div class="flow-step">
+      <div class="flow-step-num">1</div>
+      <h4>User Dashboard</h4>
+      <p>Wallet balance, quick actions &mdash; Pay, History, Add Money, AI Insights &mdash; all at a glance.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">2</div>
+      <h4>Scan &amp; Pay</h4>
+      <p>Point camera at merchant QR. Signed voucher generated instantly. No internet needed.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num">3</div>
+      <h4>Merchant Receives</h4>
+      <p>Merchant QR shown. Pending vouchers listed with one-tap sync button when online.</p>
+    </div>
+    <div class="flow-step">
+      <div class="flow-step-num done">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h4>Verified &amp; Settled</h4>
+      <p>Server verifies ECDSA signature and credits the merchant. Transaction complete.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="api">
+<div class="section-inner">
+  <div class="section-header center">
+    <p class="section-tag">For Developers</p>
+    <h2 class="section-title">RESTful Backend API</h2>
+    <p class="section-sub">Node.js + MongoDB API &mdash; open source, production-ready, deployed on Render.</p>
+  </div>
+  <div class="api-box">
+    <p class="ep-label">Base URL</p>
+    <div class="base-url">
+      <span>https://nonetpay.onrender.com</span>
+      <button id="copyBtn" onclick="copyUrl()">Copy</button>
+    </div>
+    <div id="statusPill">&#8987; Checking server&hellip;</div>
+    <p class="ep-label">Key Endpoints</p>
+    <div class="endpoints">
+      <div class="endpoint"><span class="method get">GET</span><span class="ep-path">/api/health</span></div>
+      <div class="endpoint"><span class="method post">POST</span><span class="ep-path">/api/register &amp; /api/login</span></div>
+      <div class="endpoint"><span class="method get">GET</span><span class="ep-path">/api/balance</span></div>
+      <div class="endpoint"><span class="method post">POST</span><span class="ep-path">/api/vouchers/redeem</span></div>
+      <div class="endpoint"><span class="method get">GET</span><span class="ep-path">/api/transactions</span></div>
+      <div class="endpoint"><span class="method post">POST</span><span class="ep-path">/api/payments/create-order</span></div>
+      <div class="endpoint"><span class="method post">POST</span><span class="ep-path">/api/ai/insights</span></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="download" class="download-section">
+<div class="dl-glow"></div>
+<div class="section-inner">
+  <div class="dl-inner">
+    <p class="dl-tag">Get The App</p>
+    <h2 class="dl-title">Download NONETPAY</h2>
+    <p class="dl-sub">Install directly &mdash; no Play Store needed. Enable "Install unknown apps" on Android and you're ready to pay offline instantly.</p>
+    <div class="dl-btns">
+      <a href="https://expo.dev/accounts/ashleshs/projects/offline-pay/builds" target="_blank" class="dl-btn-primary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+        Download Android APK
+      </a>
+      <button class="dl-btn-secondary" onclick="openAdminModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Admin Dashboard
+      </button>
+    </div>
+    <p class="dl-version">v1.0.1 &middot; Android 8.0+ &middot; Built with Expo EAS</p>
+  </div>
+</div>
+</section>
+
+<footer>
+<div class="footer-inner">
+  <div class="footer-brand">
+    <div class="logo-mark">N</div>
+    <span><strong style="color:var(--text)">NONETPAY</strong> &middot; Built by <a href="mailto:NoNetPay@gmail.com" style="color:var(--accent)">Quantrix</a></span>
+  </div>
+  <div class="footer-links">
+    <a href="/api/health">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Health
+    </a>
+    <button onclick="openAdminModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      Admin
+    </button>
+    <a href="https://github.com/mujju-212/nonetpay" target="_blank">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+      GitHub
+    </a>
+    <a href="mailto:NoNetPay@gmail.com">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Support
+    </a>
+  </div>
+</div>
 </footer>
 
+<div class="modal-overlay" id="adminModal" onclick="handleOverlayClick(event)">
+<div class="modal-card">
+  <button class="modal-close" onclick="closeAdminModal()">&#x2715;</button>
+  <div class="modal-logo"><div class="logo-mark">N</div><span>NONETPAY</span></div>
+  <div class="modal-title">Admin Access</div>
+  <p class="modal-sub">Enter your admin credentials to access the dashboard.</p>
+  <div class="modal-field">
+    <label>Phone Number</label>
+    <input type="tel" id="adminPhone" placeholder="Enter admin phone number" autocomplete="off"/>
+  </div>
+  <div class="modal-field">
+    <label>Password</label>
+    <input type="password" id="adminPass" placeholder="Enter admin password"/>
+  </div>
+  <div class="modal-err" id="adminErr">Invalid phone or password. Please try again.</div>
+  <button class="modal-submit" onclick="submitAdmin()">Access Dashboard</button>
+</div>
+</div>
+
 <script>
-  lucide.createIcons();
-
-  // Word cycling
-  const words = document.querySelectorAll('.word');
-  let cur = 0;
-  function cycle() {
-    words.forEach((w,i) => {
-      w.classList.remove('active','above','below');
-      if (i === cur) w.classList.add('active');
-      else if (i < cur) w.classList.add('above');
-      else w.classList.add('below');
-    });
-    cur = (cur + 1) % words.length;
-  }
-  cycle(); setInterval(cycle, 2200);
-
-  // Copy URL
-  function copyUrl() {
-    navigator.clipboard.writeText('https://nonetpay.onrender.com').then(() => {
-      const b = document.getElementById('copyBtn');
-      b.textContent = '✓ Copied!'; b.classList.replace('bg-violet-600','bg-green-600');
-      setTimeout(() => { b.textContent = 'Copy'; b.classList.replace('bg-green-600','bg-violet-600'); }, 2000);
-    });
-  }
-
-  // Health ping
-  const pill = document.getElementById('statusPill');
-  fetch('https://nonetpay.onrender.com/api/health')
-    .then(r => r.json())
-    .then(() => {
-      pill.className = 'inline-flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-3 py-2 rounded-lg mb-6';
-      pill.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Server online · MongoDB connected';
-    })
-    .catch(() => {
-      pill.className = 'inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-3 py-2 rounded-lg mb-6';
-      pill.innerHTML = '⏳ Server warming up — refresh in a moment';
-    });
+const html=document.documentElement,tb=document.getElementById('themeToggle'),ti=document.getElementById('themeIcon');
+const MOON='<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+const SUN='<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+function setTheme(t){html.setAttribute('data-theme',t);ti.innerHTML=t==='dark'?SUN:MOON;localStorage.setItem('nnp-theme',t);}
+setTheme(localStorage.getItem('nnp-theme')||'light');
+tb.addEventListener('click',()=>setTheme(html.getAttribute('data-theme')==='dark'?'light':'dark'));
+const words=document.querySelectorAll('.word');let cur=0;
+function cycle(){words.forEach((w,i)=>{w.classList.remove('active','above','below');if(i===cur)w.classList.add('active');else if(i<cur)w.classList.add('above');else w.classList.add('below');});cur=(cur+1)%words.length;}
+cycle();setInterval(cycle,2200);
+function copyUrl(){navigator.clipboard.writeText('https://nonetpay.onrender.com').then(()=>{const b=document.getElementById('copyBtn');b.textContent='Copied!';setTimeout(()=>{b.textContent='Copy';},2000);});}
+const pill=document.getElementById('statusPill');
+fetch('https://nonetpay.onrender.com/api/health').then(r=>r.json()).then(()=>{pill.style.cssText='background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:#16a34a';pill.textContent='Server online - MongoDB connected';}).catch(()=>{pill.style.cssText='background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:#d97706';pill.textContent='Server warming up - refresh in a moment';});
+function openAdminModal(){document.getElementById('adminModal').classList.add('open');setTimeout(()=>document.getElementById('adminPhone').focus(),100);}
+function closeAdminModal(){document.getElementById('adminModal').classList.remove('open');document.getElementById('adminErr').classList.remove('show');document.getElementById('adminPhone').value='';document.getElementById('adminPass').value='';}
+function handleOverlayClick(e){if(e.target===document.getElementById('adminModal'))closeAdminModal();}
+function submitAdmin(){const ph=document.getElementById('adminPhone').value.trim(),pw=document.getElementById('adminPass').value,err=document.getElementById('adminErr');if(ph==='8951248413'&&pw==='Admin@123'){closeAdminModal();window.location.href='/admin';}else{err.classList.add('show');}}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeAdminModal();if(e.key==='Enter'&&document.getElementById('adminModal').classList.contains('open'))submitAdmin();});
 </script>
-</body>
-</html>
+</body></html>

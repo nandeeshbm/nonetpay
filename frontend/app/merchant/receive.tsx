@@ -19,6 +19,7 @@ import * as Crypto from "expo-crypto";
 import pkg from "elliptic";
 import { API_BASE_URL } from "../../lib/api";
 import { notifyMerchantReceivedPayment } from "../../lib/notifications";
+import { isPublicKeyTrusted } from "../../lib/trustedKeys";
 import { Ionicons } from "@expo/vector-icons";
 const { ec: EC } = pkg;
 const ec = new EC("secp256k1");
@@ -148,6 +149,15 @@ export default function MerchantReceiveScreen() {
 
       if (!parsed.publicKeyHex) {
         setErrorMsg("Voucher is missing the public key — cannot verify signature.");
+        setScreenState("error");
+        return;
+      }
+
+      const trusted = await isPublicKeyTrusted(parsed.publicKeyHex);
+      if (!trusted) {
+        setErrorMsg(
+          "Untrusted user key. Please refresh trusted keys in Settings while online and try again."
+        );
         setScreenState("error");
         return;
       }
