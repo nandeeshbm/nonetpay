@@ -4,6 +4,9 @@ github_commit_plan.md
 RESEARCH_AND_ARCHITECTURE.md
 DEPLOYMENT.md
 cloudflared.exe
+NONETPAY.apk
+
+
 # ── Dependencies ───────────────────────────────────────────────
 node_modules/
 .pnp
