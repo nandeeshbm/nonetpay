@@ -191,6 +191,10 @@ router.get("/payment/checkout/:orderId", (req, res) => {
       box.textContent = msg;
       box.className = 'status ' + (success ? 'success' : 'error');
       document.getElementById('payBtn').style.display = 'none';
+      // Signal in-app WebView that payment succeeded
+      if (success && window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage('PAYMENT_SUCCESS');
+      }
     }
   </script>
 </body>
