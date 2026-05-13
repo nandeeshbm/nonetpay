@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { API_BASE_URL } from '../lib/api';
 
@@ -87,7 +88,7 @@ export default function MerchantForgotPasswordScreen() {
           <View style={styles.card}>
             <Text style={styles.label}>Phone Number</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>📱</Text>
+              <Ionicons name="call-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="10-digit mobile number"
@@ -101,7 +102,7 @@ export default function MerchantForgotPasswordScreen() {
 
             <Text style={styles.label}>New Password</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Min 6 characters"
@@ -114,7 +115,7 @@ export default function MerchantForgotPasswordScreen() {
 
             <Text style={styles.label}>Confirm Password</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Re-enter password"
@@ -139,7 +140,7 @@ export default function MerchantForgotPasswordScreen() {
           </View>
 
           <Pressable onPress={() => router.back()} style={styles.linkWrap}>
-            <Text style={styles.linkText}>← Back to Login</Text>
+            <Text style={styles.linkText}><Ionicons name="arrow-back" size={13} color="#6f63ff" /> Back to Login</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>

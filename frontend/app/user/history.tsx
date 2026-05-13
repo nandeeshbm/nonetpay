@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import React, { useEffect, useState, useCallback } from "react";
+﻿﻿﻿import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import {
   API_BASE_URL,
   getOfflineTransactions,
@@ -499,7 +500,7 @@ export default function UserHistoryScreen() {
           style={({ pressed }) => [styles.backButton, pressed && styles.backButtonPressed]}
         >
           <View style={styles.backBtnInner}>
-            <Text style={styles.backArrow}>←</Text>
+            <Ionicons name="chevron-back" size={20} color="#1f2433" />
           </View>
         </Pressable>
         <View style={styles.headerCenter}>

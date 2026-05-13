@@ -250,6 +250,16 @@ export default function MerchantSettingsScreen() {
 
   // ─── OTA Update check ─────────────────────────────────
   const handleCheckUpdate = async () => {
+    if (__DEV__) {
+      setUpdateStatus("error");
+      Alert.alert(
+        "Dev Mode",
+        "OTA updates are only available in production (EAS) builds. This is expected during development."
+      );
+      setTimeout(() => setUpdateStatus("idle"), 3000);
+      return;
+    }
+
     try {
       setCheckingUpdate(true);
       setUpdateStatus("idle");
@@ -257,15 +267,22 @@ export default function MerchantSettingsScreen() {
       if (update.isAvailable) {
         setUpdateStatus("available");
         Alert.alert(
-          "🎉 Update Available!",
+          "Update Available!",
           "A new version is ready. The app will restart to apply it.",
           [
             { text: "Later", style: "cancel" },
             {
               text: "Install Now",
               onPress: async () => {
-                await Updates.fetchUpdateAsync();
-                await Updates.reloadAsync();
+                try {
+                  await Updates.fetchUpdateAsync();
+                  await Updates.reloadAsync();
+                } catch (installErr: any) {
+                  Alert.alert(
+                    "Install Failed",
+                    "Could not install the update. Please try again.\n\n" + (installErr?.message || "")
+                  );
+                }
               },
             },
           ]
@@ -274,9 +291,12 @@ export default function MerchantSettingsScreen() {
         setUpdateStatus("uptodate");
         setTimeout(() => setUpdateStatus("idle"), 3000);
       }
-    } catch {
+    } catch (err: any) {
       setUpdateStatus("error");
-      Alert.alert("Dev Mode", "OTA updates are only available in production APK builds.");
+      Alert.alert(
+        "Update Check Failed",
+        "Could not check for updates. Make sure you have an internet connection.\n\n" + (err?.message || "")
+      );
       setTimeout(() => setUpdateStatus("idle"), 3000);
     } finally {
       setCheckingUpdate(false);

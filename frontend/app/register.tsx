@@ -11,9 +11,11 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { API_BASE_URL } from '../lib/api';
 
@@ -73,7 +75,10 @@ export default function RegisterScreen() {
       console.error('Register error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       console.error('Error details:', errorMessage);
-      Alert.alert('Connection Error', `Cannot connect to server at ${API_BASE_URL}. Make sure:\n1. Backend is running\n2. Phone and PC on same WiFi\n3. IP address is correct`);
+      Alert.alert(
+        'Connection Error',
+        `Cannot connect to server at ${API_BASE_URL}.\n\nMake sure:\n1. EXPO_PUBLIC_API_URL in frontend/.env points to the backend you want to use\n2. That backend is running\n3. Restart Expo after changing the env file`
+      );
     } finally {
       setLoading(false);
     }
@@ -90,6 +95,7 @@ export default function RegisterScreen() {
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
+            <Image source={require('../assets/images/nnplogo.png')} style={styles.logo} resizeMode="contain" />
             <Text style={styles.title}>Create Account</Text>
             <Text style={styles.subtitle}>Join NONETPAY</Text>
           </View>
@@ -97,7 +103,7 @@ export default function RegisterScreen() {
           <View style={styles.card}>
             <Text style={styles.label}>Full Name</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🙍</Text>
+              <Ionicons name="person-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your full name"
@@ -109,7 +115,7 @@ export default function RegisterScreen() {
 
             <Text style={styles.label}>Phone Number</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>📱</Text>
+              <Ionicons name="call-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="10-digit mobile number"
@@ -123,7 +129,7 @@ export default function RegisterScreen() {
 
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Min 6 characters"
@@ -192,7 +198,8 @@ const styles = StyleSheet.create({
   kav: { flex: 1 },
   scroll: { paddingHorizontal: 24, paddingTop: 64, paddingBottom: 20 },
 
-  header: { marginBottom: 24 },
+  header: { marginBottom: 24, alignItems: 'center' as const },
+  logo: { width: 64, height: 64, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: '800', color: '#1f2433', marginBottom: 6 },
   subtitle: { fontSize: 14, color: '#8b8fa6', fontWeight: '600' },
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, Pressable, StyleSheet, StatusBar, Linking } from "react-native";
+import { View, Text, Pressable, StyleSheet, StatusBar, Linking, Image } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -27,7 +27,7 @@ export default function RoleSelectScreen() {
       <View style={styles.container}>
         <View style={styles.headerSection}>
           <View style={styles.brandIconWrap}>
-            <Ionicons name="wallet-outline" size={26} color="#6f63ff" />
+            <Image source={require("../assets/images/nnplogo.png")} style={styles.brandLogo} resizeMode="contain" />
           </View>
           <Text style={styles.title}>NONETPAY</Text>
           <Text style={styles.subtitle}>Choose your role to continue securely</Text>
@@ -150,9 +150,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   brandIconWrap: {
-    width: 58,
-    height: 58,
-    borderRadius: 18,
+    width: 72,
+    height: 72,
+    borderRadius: 22,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(255,255,255,0.94)",
@@ -161,6 +161,11 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
     elevation: 4,
+    overflow: "hidden",
+  },
+  brandLogo: {
+    width: 52,
+    height: 52,
   },
   title: {
     marginTop: 12,

@@ -19,6 +19,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { API_BASE_URL } from "../../lib/api";
+import { Ionicons } from "@expo/vector-icons";
 import * as Updates from "expo-updates";
 
 if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
@@ -183,6 +184,17 @@ export default function UserSettingsScreen() {
 
   // ─── OTA Update check ─────────────────────────────────────────
   const handleCheckUpdate = async () => {
+    // In dev mode (Expo Go / tunnel), OTA is never available
+    if (__DEV__) {
+      setUpdateStatus("error");
+      Alert.alert(
+        "Dev Mode",
+        "OTA updates are only available in production (EAS) builds. This is expected during development."
+      );
+      setTimeout(() => setUpdateStatus("idle"), 3000);
+      return;
+    }
+
     try {
       setCheckingUpdate(true);
       setUpdateStatus("idle");
@@ -190,15 +202,22 @@ export default function UserSettingsScreen() {
       if (update.isAvailable) {
         setUpdateStatus("available");
         Alert.alert(
-          "🎉 Update Available!",
+          "Update Available!",
           "A new version of NONETPAY is ready. The app will restart to apply it.",
           [
             { text: "Later", style: "cancel" },
             {
               text: "Install Now",
               onPress: async () => {
-                await Updates.fetchUpdateAsync();
-                await Updates.reloadAsync();
+                try {
+                  await Updates.fetchUpdateAsync();
+                  await Updates.reloadAsync();
+                } catch (installErr: any) {
+                  Alert.alert(
+                    "Install Failed",
+                    "Could not install the update. Please try again.\n\n" + (installErr?.message || "")
+                  );
+                }
               },
             },
           ]
@@ -207,12 +226,11 @@ export default function UserSettingsScreen() {
         setUpdateStatus("uptodate");
         setTimeout(() => setUpdateStatus("idle"), 3000);
       }
-    } catch {
-      // expo-updates not available in dev/tunnel mode
+    } catch (err: any) {
       setUpdateStatus("error");
       Alert.alert(
-        "Dev Mode",
-        "OTA updates are only available in production APK builds. This is normal during development."
+        "Update Check Failed",
+        "Could not check for updates. Make sure you have an internet connection.\n\n" + (err?.message || "")
       );
       setTimeout(() => setUpdateStatus("idle"), 3000);
     } finally {
@@ -249,7 +267,7 @@ export default function UserSettingsScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Pressable onPress={() => router.back()} hitSlop={8}
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.6 }]}>
-          <Text style={styles.backArrow}>←</Text>
+          <Ionicons name="chevron-back" size={20} color="#1f2433" />
         </Pressable>
         <Text style={styles.title}>Settings</Text>
         <View style={{ width: 40 }} />
@@ -265,13 +283,16 @@ export default function UserSettingsScreen() {
             </View>
             <Text style={styles.avatarName}>{name || "User"}</Text>
             <View style={styles.avatarBadge}>
-              <Text style={styles.avatarBadgeText}>👤 Customer Account</Text>
+              <View style={styles.inlineIconText}>
+                <Ionicons name="person-outline" size={14} color="#6f63ff" />
+                <Text style={styles.avatarBadgeText}>Customer Account</Text>
+              </View>
             </View>
           </LinearGradient>
         </View>
 
         {/* ══ SECTION: PROFILE ══════════════════════════════════════ */}
-        <SectionHeader label="ACCOUNT DETAILS" icon="👤" />
+        <SectionHeader label="ACCOUNT DETAILS" icon="person-outline" />
         <View style={styles.card}>
 
           {/* Name */}
@@ -294,7 +315,10 @@ export default function UserSettingsScreen() {
             </View>
             {!editingName && (
               <Pressable style={styles.editPill} onPress={() => { setDraftName(name); setEditingName(true); }}>
-                <Text style={styles.editPillText}>✏️ Edit</Text>
+              <View style={styles.inlineIconText}>
+                <Ionicons name="create-outline" size={12} color="#6f63ff" />
+                <Text style={styles.editPillText}>Edit</Text>
+              </View>
               </Pressable>
             )}
           </View>
@@ -324,7 +348,7 @@ export default function UserSettingsScreen() {
               <Text style={styles.fieldLabel}>PHONE NUMBER</Text>
               <Text style={styles.fieldValue}>{phone || "—"}</Text>
             </View>
-            <View style={styles.lockBadge}><Text style={styles.lockText}>🔒 Fixed</Text></View>
+            <View style={styles.lockBadge}><View style={styles.inlineIconText}><Ionicons name="lock-closed-outline" size={12} color="#9ca3af" /><Text style={styles.lockText}>Fixed</Text></View></View>
           </View>
 
           <View style={styles.divider} />
@@ -339,7 +363,7 @@ export default function UserSettingsScreen() {
         </View>
 
         {/* ══ SECTION: SECURITY ════════════════════════════════════= */}
-        <SectionHeader label="SECURITY" icon="🔐" />
+        <SectionHeader label="SECURITY" icon="shield-checkmark-outline" />
         <View style={styles.card}>
 
           {/* Change password toggle */}
@@ -353,14 +377,14 @@ export default function UserSettingsScreen() {
           >
             <View style={styles.actionLeft}>
               <View style={[styles.actionIcon, { backgroundColor: "#ede9fe" }]}>
-                <Text>🔑</Text>
+                <Ionicons name="key-outline" size={18} color="#6f63ff" />
               </View>
               <View>
                 <Text style={styles.actionTitle}>Change Password</Text>
                 <Text style={styles.actionSub}>Update your login password</Text>
               </View>
             </View>
-            <Text style={styles.chevron}>{showPasswordSection ? "▲" : "▼"}</Text>
+            <Ionicons name={showPasswordSection ? "chevron-up" : "chevron-down"} size={14} color="#9ca3af" />
           </Pressable>
 
           {showPasswordSection && (
@@ -405,22 +429,22 @@ export default function UserSettingsScreen() {
           <View style={styles.divider} />
 
           {/* Crypto info rows */}
-          <InfoRow icon="🛡️" label="Signature Scheme" value="ECDSA secp256k1" />
+          <InfoRow icon="shield-outline" label="Signature Scheme" value="ECDSA secp256k1" />
           <View style={styles.divider} />
-          <InfoRow icon="📱" label="Keys Stored" value="On-device only" />
+          <InfoRow icon="phone-portrait-outline" label="Keys Stored" value="On-device only" />
           <View style={styles.divider} />
-          <InfoRow icon="✅" label="Vouchers" value="Cryptographically signed" />
+          <InfoRow icon="checkmark-circle-outline" label="Vouchers" value="Cryptographically signed" />
         </View>
 
         {/* ══ SECTION: HELP & SUPPORT ══════════════════════════════== */}
-        <SectionHeader label="HELP & SUPPORT" icon="💬" />
+        <SectionHeader label="HELP & SUPPORT" icon="chatbubble-ellipses-outline" />
         <View style={styles.card}>
           {FAQ_ITEMS.map((item, i) => (
             <View key={item.q}>
               {i > 0 && <View style={styles.divider} />}
               <Pressable style={styles.faqQuestion} onPress={() => toggleFaq(i)}>
                 <Text style={styles.faqQ}>{item.q}</Text>
-                <Text style={styles.chevron}>{openFaq === i ? "▲" : "▼"}</Text>
+                <Ionicons name={openFaq === i ? "chevron-up" : "chevron-down"} size={14} color="#9ca3af" />
               </Pressable>
               {openFaq === i && (
                 <Text style={styles.faqA}>{item.a}</Text>
@@ -430,11 +454,11 @@ export default function UserSettingsScreen() {
         </View>
 
         {/* ══ CONTACT CARD ═════════════════════════════════════════= */}
-        <SectionHeader label="CONTACT SUPPORT" icon="📧" />
+        <SectionHeader label="CONTACT SUPPORT" icon="mail-outline" />
         <View style={styles.contactCard}>
           <View style={styles.contactRow}>
             <View style={[styles.contactIcon, { backgroundColor: "#ede9fe" }]}>
-              <Text style={{ fontSize: 20 }}>👨‍💻</Text>
+              <Ionicons name="headset-outline" size={20} color="#6f63ff" />
             </View>
             <View style={styles.contactInfo}>
               <Text style={styles.contactName}>Quantrix</Text>
@@ -445,7 +469,7 @@ export default function UserSettingsScreen() {
             style={styles.emailBtn}
             onPress={() => Linking.openURL("mailto:ashleshskumar12@gmail.com?subject=NONETPAY%20Support")}
           >
-            <Text style={styles.emailBtnIcon}>📩</Text>
+            <Ionicons name="send-outline" size={16} color="#fff" />
             <Text style={styles.emailBtnText}>ashleshskumar12@gmail.com</Text>
           </Pressable>
           <Text style={styles.supportNote}>
@@ -454,12 +478,12 @@ export default function UserSettingsScreen() {
         </View>
 
         {/* ══ APP UPDATE ═════════════════════════════════════════════ */}
-        <SectionHeader label="APP UPDATE" icon="🚀" />
+        <SectionHeader label="APP UPDATE" icon="cloud-download-outline" />
         <View style={styles.card}>
           <View style={styles.updateRow}>
             <View style={styles.updateLeft}>
               <View style={[styles.actionIcon, { backgroundColor: "#ede9fe" }]}>
-                <Text>🚀</Text>
+                <Ionicons name="rocket-outline" size={18} color="#6f63ff" />
               </View>
               <View>
                 <Text style={styles.actionTitle}>NONETPAY v{appVersion}</Text>
@@ -500,19 +524,19 @@ export default function UserSettingsScreen() {
   );
 }
 
-function SectionHeader({ label, icon }: { label: string; icon: string }) {
+function SectionHeader({ label, icon }: { label: string; icon: any }) {
   return (
     <View style={styles.sectionHeader}>
-      <Text style={styles.sectionIcon}>{icon}</Text>
+      <Ionicons name={icon} size={14} color="#6f63ff" style={styles.sectionIcon} />
       <Text style={styles.sectionLabel}>{label}</Text>
     </View>
   );
 }
 
-function InfoRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function InfoRow({ icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <View style={styles.infoRow}>
-      <Text style={styles.infoIcon}>{icon}</Text>
+      <Ionicons name={icon} size={16} color="#6f63ff" style={styles.infoIcon} />
       <Text style={styles.infoLabel}>{label}</Text>
       <View style={styles.infoBadge}><Text style={styles.infoBadgeText}>{value}</Text></View>
     </View>
@@ -540,7 +564,7 @@ function PasswordInput({
           autoCorrect={false}
         />
         <Pressable onPress={onToggle} style={styles.eyeBtn}>
-          <Text style={styles.eyeText}>{show ? "🙈" : "👁️"}</Text>
+          <Ionicons name={show ? "eye-off-outline" : "eye-outline"} size={16} color="#6b7280" />
         </Pressable>
       </View>
     </View>
@@ -631,13 +655,14 @@ const styles = StyleSheet.create({
     borderRadius: 20,
   },
   avatarBadgeText: { color: "#6f63ff", fontSize: 13, fontWeight: "700" },
+  inlineIconText: { flexDirection: "row", alignItems: "center", gap: 6 },
 
   // Section header
   sectionHeader: {
     flexDirection: "row", alignItems: "center",
     marginBottom: 8, marginTop: 4, paddingHorizontal: 4,
   },
-  sectionIcon: { fontSize: 14, marginRight: 6, color: "#6f63ff" },
+  sectionIcon: { marginRight: 6 },
   sectionLabel: {
     fontSize: 11, fontWeight: "800", color: "#8b8fa6",
     letterSpacing: 1.2, textTransform: "uppercase",
@@ -736,7 +761,7 @@ const styles = StyleSheet.create({
 
   // Info rows
   infoRow: { flexDirection: "row", alignItems: "center" },
-  infoIcon: { fontSize: 16, marginRight: 10, width: 24, textAlign: "center" },
+  infoIcon: { marginRight: 10, width: 24 },
   infoLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: "#374151" },
   infoBadge: {
     backgroundColor: "#f0fdf4", paddingHorizontal: 10,

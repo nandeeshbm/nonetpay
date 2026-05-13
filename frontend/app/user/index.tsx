@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { router } from "expo-router";
+import BrandedLoader from "../../components/BrandedLoader";
 
 export default function UserHomeScreen() {
   // Redirect to wallet immediately
@@ -9,17 +9,6 @@ export default function UserHomeScreen() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <ActivityIndicator size="large" />
-    </View>
+    <BrandedLoader label="Opening your wallet..." />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#fff",
-  },
-});

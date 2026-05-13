@@ -14,6 +14,7 @@ import { CameraView, useCameraPermissions } from "expo-camera";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import QRCode from "react-native-qrcode-svg";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { getUserId, signPayloadHex, ensureUserKeypairAndId, getPublicKeyHex } from "../../lib/cryptoKeys";
 import { API_BASE_URL, saveLocalBalance, getLocalBalance, deductLocalBalance, queueOfflineTransaction, saveGeneratedVoucher, getGeneratedVouchers, syncOfflineTransactions, GeneratedVoucher, VOUCHER_EXPIRY_DAYS, isVoucherExpired, refundExpiredVouchers } from "../../lib/api";
@@ -302,10 +303,10 @@ export default function UserPayScreen() {
 
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backButtonText}>←</Text>
+          <Ionicons name="chevron-back" size={20} color="#1f2433" />
         </Pressable>
         <View style={styles.headerTitleRow}>
-          <Text style={styles.headerIcon}>💳</Text>
+          <Ionicons name="card-outline" size={20} color="#6f63ff" />
           <Text style={styles.headerTitle}>Pay Merchant</Text>
         </View>
         <View style={styles.headerSpacer} />
@@ -325,14 +326,14 @@ export default function UserPayScreen() {
             <Text style={styles.balanceAmount}>₹{balance ?? 0}</Text>
           )}
           {isOffline && (
-            <Text style={styles.offlineBadge}>📵 Offline — cached balance</Text>
+            <View style={styles.offlineBadge}><Ionicons name="cloud-offline-outline" size={12} color="#6f63ff" /><Text style={styles.offlineBadgeText}>Offline — cached balance</Text></View>
           )}
         </View>
 
         {/* ── UNUSED VOUCHERS — generated but not yet shown to merchant ── */}
         {!merchant && !voucher && !showingVoucher && unusedVouchers.length > 0 && (
           <View style={styles.stepCard}>
-            <Text style={styles.unusedTitle}>🎫 Unused Vouchers</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}><Ionicons name="ticket-outline" size={16} color="#6f63ff" /><Text style={styles.unusedTitle}>Unused Vouchers</Text></View>
             <Text style={styles.unusedSub}>
               These were generated but the merchant hasn't scanned them yet. Tap to show the QR again.
             </Text>
@@ -450,7 +451,7 @@ export default function UserPayScreen() {
               <Text style={styles.permissionText}>Requesting camera permission...</Text>
             ) : !permission.granted ? (
               <View style={styles.permissionContainer}>
-                <Text style={styles.permissionText}>📷 Camera access needed</Text>
+                <Text style={styles.permissionText}>Camera access needed</Text>
                 <Pressable style={styles.primaryButton} onPress={requestPermission}>
                   <Text style={styles.primaryButtonText}>Grant Permission</Text>
                 </Pressable>
@@ -472,7 +473,7 @@ export default function UserPayScreen() {
                   </CameraView>
                 </View>
                 <Text style={styles.scanInstructions}>
-                  🎯 Point camera at merchant's QR code
+                  Point camera at merchant's QR code
                 </Text>
               </View>
             )}
@@ -488,7 +489,7 @@ export default function UserPayScreen() {
             </View>
             
             <View style={styles.merchantInfo}>
-              <Text style={styles.merchantLabel}>🏪 Merchant</Text>
+              <Text style={styles.merchantLabel}>Merchant</Text>
               <Text style={styles.merchantName}>{merchant.name || 'Business'}</Text>
               <Text style={styles.merchantId}>ID: {merchant.merchantId}</Text>
             </View>
@@ -519,11 +520,11 @@ export default function UserPayScreen() {
               disabled={!amount}
               onPress={handleGenerateVoucher}
             >
-              <Text style={styles.primaryButtonText}>💳 Generate Payment Voucher</Text>
+              <Text style={styles.primaryButtonText}>Generate Payment Voucher</Text>
             </Pressable>
 
             <Text style={styles.infoText}>
-              ℹ️ Your balance will be deducted after voucher generation
+              Your balance will be deducted after voucher generation
             </Text>
           </View>
         )}
@@ -561,13 +562,13 @@ export default function UserPayScreen() {
               <View style={styles.detailRow}>
                 <Text style={styles.detailLabel}>Status:</Text>
                 <Text style={isOffline ? styles.statusOffline : styles.statusOnline}>
-                  {isOffline ? "📵 Offline (will sync)" : "🟢 Online"}
+                  {isOffline ? "Offline (will sync)" : "Online"}
                 </Text>
               </View>
             </View>
 
             <Text style={styles.instructionText}>
-              📱 Show this QR code to the merchant for verification
+              Show this QR code to the merchant for verification
             </Text>
             
             <Pressable
@@ -946,10 +947,19 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   offlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: 'rgba(111,99,255,0.1)',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  offlineBadgeText: {
     fontSize: 11,
-    color: '#b7791f',
+    color: '#6f63ff',
     fontWeight: '600',
-    marginTop: 4,
   },
   instructionText: {
     fontSize: 14,
