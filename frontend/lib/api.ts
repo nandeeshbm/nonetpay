@@ -3,14 +3,11 @@ import {
   notifyPaymentConfirmed,
   notifyVoucherSynced,
 } from "./notifications";
+import { API_BASE_URL } from "../constants/Config";
 
-// ✅ Production backend (Render)
-export const API_BASE_URL = "https://nonetpay.onrender.com";
+// ─── Backend URL ──────────────────────────────────────────────────────────────
+// Reads from the shared frontend config so every screen uses the same env value.
 export const BASE_URL = API_BASE_URL;
-
-// 🔧 For local dev, replace with your tunnel or localhost URL
-
-
 
 
 // ─── AsyncStorage keys ────────────────────────────────────────────────────────

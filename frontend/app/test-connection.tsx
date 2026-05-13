@@ -1,33 +1,37 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
-import { API_BASE_URL } from '../lib/api';
+import { API_BASE_URL, API_BASE_URL_HELP, HAS_API_BASE_URL } from '../constants/Config';
 
 export default function TestConnectionScreen() {
   const [testing, setTesting] = useState(false);
   const [result, setResult] = useState('');
 
   const testConnection = async () => {
+    if (!HAS_API_BASE_URL) {
+      setResult(`❌ API URL NOT SET\n\n${API_BASE_URL_HELP}`);
+      return;
+    }
+
     setTesting(true);
     setResult('Testing...');
     
     try {
       console.log('Testing connection to:', API_BASE_URL);
-      const response = await fetch(`${API_BASE_URL}/`, {
-        method: 'GET',
+      const response = await fetch(`${API_BASE_URL}/api/health`, {
+        method: 'HEAD',
       });
       
       console.log('Response status:', response.status);
-      const text = await response.text();
       
       if (response.ok) {
         setResult(`✅ SUCCESS!\nConnected to: ${API_BASE_URL}\nStatus: ${response.status}`);
       } else {
-        setResult(`❌ FAILED\nStatus: ${response.status}\nResponse: ${text.slice(0, 100)}`);
+        setResult(`❌ FAILED\nStatus: ${response.status}\nHealth endpoint did not respond successfully.`);
       }
     } catch (error) {
       console.error('Connection test error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      setResult(`❌ CONNECTION FAILED\n\nError: ${errorMessage}\n\nCurrent URL: ${API_BASE_URL}\n\nTroubleshooting:\n1. Is the backend (Render) running?\n2. Check: ${API_BASE_URL}\n3. Make sure the Render service is not sleeping.`);
+      setResult(`❌ CONNECTION FAILED\n\nError: ${errorMessage}\n\nCurrent URL: ${API_BASE_URL}\n\nTroubleshooting:\n1. Make sure your backend is running at this URL.\n2. Check EXPO_PUBLIC_API_URL in frontend/.env.\n3. Restart Expo after changing the env file.`);
     } finally {
       setTesting(false);
     }
