@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   TextInput,
@@ -11,18 +11,28 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { API_BASE_URL } from '../lib/api';
 import { ensureTrustedUserKeys } from '../lib/trustedKeys';
+import { saveOfflineSession, tryOfflineLogin, hasOfflineSession } from '../lib/offlineAuth';
+import type { AuthMerchant } from '../hooks/useAuth';
 
 export default function MerchantLoginScreen() {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [canLoginOffline, setCanLoginOffline] = useState(false);
+
+  // Check on mount whether a cached merchant session exists.
+  useEffect(() => {
+    hasOfflineSession('merchant').then(setCanLoginOffline);
+  }, []);
 
   const handleLogin = async () => {
     if (!phone || !password) {
@@ -53,6 +63,13 @@ export default function MerchantLoginScreen() {
       await AsyncStorage.setItem('@auth_token', data.token);
       await AsyncStorage.setItem('@merchant_data', JSON.stringify(data.merchant));
       await AsyncStorage.setItem('@merchant_id', data.merchant.merchantId);
+
+      // ── Cache credentials for future offline logins ──────────────────────
+      await saveOfflineSession('merchant', phone, password, {
+        token: data.token,
+        merchant: data.merchant,
+      });
+
       try {
         await ensureTrustedUserKeys(data.token);
       } catch (error: any) {
@@ -63,7 +80,30 @@ export default function MerchantLoginScreen() {
       }
       router.replace('/merchant/home');
     } catch {
-      Alert.alert('Connection Error', 'Cannot connect to server. Make sure the backend is running.');
+      // ── Network unreachable — attempt offline login ───────────────────────
+      const offline = await tryOfflineLogin('merchant', phone, password);
+
+      if (offline.success && offline.role === 'merchant') {
+        const merchant = offline.merchant as AuthMerchant;
+        await AsyncStorage.setItem('@auth_token', offline.token);
+        await AsyncStorage.setItem('@merchant_data', JSON.stringify(merchant));
+        await AsyncStorage.setItem('@merchant_id', merchant.merchantId);
+
+        Alert.alert(
+          '📴 Offline Mode',
+          'No internet connection. You are logged in using your cached session. ' +
+          'You can scan vouchers offline. Sync happens automatically when online.',
+          [{ text: 'Continue', onPress: () => router.replace('/merchant/home') }]
+        );
+      } else if (offline.success === false && offline.reason === 'no_cache') {
+        Alert.alert(
+          'No Internet Connection',
+          'You need an internet connection for your first login on this device. ' +
+          'Once logged in online, future logins will work offline too.'
+        );
+      } else {
+        Alert.alert('Login Failed', 'Incorrect phone number or password.');
+      }
     } finally {
       setLoading(false);
     }
@@ -80,14 +120,21 @@ export default function MerchantLoginScreen() {
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
+            <Image source={require('../assets/images/nnplogo.png')} style={styles.logo} resizeMode="contain" />
             <Text style={styles.title}>Merchant Login</Text>
             <Text style={styles.subtitle}>Sign in to your merchant account</Text>
+            {canLoginOffline && (
+              <View style={styles.offlineBadge}>
+                <Ionicons name="cloud-offline-outline" size={13} color="#6f63ff" />
+                <Text style={styles.offlineBadgeText}>Offline login available</Text>
+              </View>
+            )}
           </View>
 
           <View style={styles.card}>
             <Text style={styles.label}>Phone Number</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>📱</Text>
+              <Ionicons name="call-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="10-digit mobile number"
@@ -102,7 +149,7 @@ export default function MerchantLoginScreen() {
 
             <Text style={styles.label}>Password</Text>
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputIcon}>🔒</Text>
+              <Ionicons name="lock-closed-outline" size={18} color="#6f63ff" style={{ marginRight: 4 }} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
@@ -179,7 +226,8 @@ const styles = StyleSheet.create({
   kav: { flex: 1 },
   scroll: { paddingHorizontal: 24, paddingTop: 64, paddingBottom: 20 },
 
-  header: { marginBottom: 24 },
+  header: { marginBottom: 24, alignItems: 'center' as const },
+  logo: { width: 64, height: 64, marginBottom: 12 },
   title: { fontSize: 28, fontWeight: '800', color: '#1f2433', marginBottom: 6 },
   subtitle: { fontSize: 14, color: '#8b8fa6', fontWeight: '600' },
 
@@ -248,4 +296,18 @@ const styles = StyleSheet.create({
     borderRadius: 16, backgroundColor: 'rgba(255,255,255,0.75)',
   },
   switchBtnText: { color: '#1f2433', fontSize: 14, fontWeight: '700' },
+
+  offlineBadge: {
+    marginTop: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: 'rgba(111,99,255,0.1)',
+    borderRadius: 20,
+    paddingVertical: 5,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(111,99,255,0.25)',
+  },
+  offlineBadgeText: { fontSize: 12, color: '#6f63ff', fontWeight: '700' },
 });
