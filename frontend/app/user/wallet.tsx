@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,15 +21,24 @@ import { useFocusEffect } from "@react-navigation/native";
 import { API_BASE_URL, saveLocalBalance, getLocalBalance, syncOfflineTransactions, refundExpiredVouchers } from "../../lib/api";
 import { ensureUserKeypairAndId } from "../../lib/cryptoKeys";
 import { registerPublicKeyIfNeeded } from "../../lib/registerKey";
-import { createTopUpOrder, normalizeCheckoutUrl, pollBalanceAfterPayment } from "../../lib/razorpay";
+import { initiateTopUp } from "../../lib/razorpay";
 import { OfflineBanner } from "../../components/OfflineBanner";
 import { useOfflineSync } from "../../hooks/useOfflineSync";
-import { WebView, type WebViewNavigation } from "react-native-webview";
 
 const MAX_SINGLE_AMOUNT = 1000;   // per transaction
 const MAX_WALLET_BALANCE = 5000;  // total wallet cap
 
-const QUICK_ACTIONS = [
+type QuickAction = {
+  key: string;
+  title: string;
+  subtitle: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  iconColor: string;
+  iconBg: string;
+  route: Href;
+};
+
+const QUICK_ACTIONS: QuickAction[] = [
   {
     key: "pay",
     title: "Pay",
@@ -197,12 +206,6 @@ export default function UserWalletScreen() {
 
   useFocusEffect(useCallback(() => { loadAll(); }, [loadAll]));
 
-  // ── In-app payment WebView state ──────────────────────────────────────────
-  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
-  const [showPaymentWebView, setShowPaymentWebView] = useState(false);
-  const [paymentAmount, setPaymentAmount] = useState(0);
-  const webViewRef = useRef<WebView>(null);
-
   const handleAddBalance = async () => {
     const amt = Number(addAmount);
     if (isNaN(amt) || amt <= 0) { setError("Please enter a valid amount"); return; }
@@ -224,41 +227,21 @@ export default function UserWalletScreen() {
       setLoading(true);
       const token = await AsyncStorage.getItem("@auth_token");
       if (!token) { Alert.alert("Error", "Please login first"); return; }
-
-      // 1. Create order on backend
-      const orderResult = await createTopUpOrder(token, amt);
-      if (!orderResult.success || !orderResult.checkoutUrl) {
-        Alert.alert("Error", orderResult.error || "Failed to create order");
-        return;
-      }
-
-      // 2. Close add-money modal, open in-app WebView modal
       setShowAddModal(false);
       setAddAmount("");
       setError(null);
-      setPaymentAmount(amt);
-      setPaymentUrl(normalizeCheckoutUrl(orderResult.checkoutUrl));
-      setShowPaymentWebView(true);
-    } catch {
-      Alert.alert("Error", "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  /** Called when the in-app WebView detects payment success */
-  const handlePaymentSuccess = async () => {
-    setShowPaymentWebView(false);
-    setPaymentUrl(null);
-
-    try {
-      const token = await AsyncStorage.getItem("@auth_token");
-      if (!token) return;
-
-      const result = await pollBalanceAfterPayment(
+      const rawUserData = await AsyncStorage.getItem("@user_data");
+      const storedUser = rawUserData ? JSON.parse(rawUserData) : null;
+      const result = await initiateTopUp(
         token,
+        amt,
         balance ?? 0,
-        paymentAmount,
+        {
+          name: storedUser?.name || userName || "User",
+          contact: storedUser?.phone || undefined,
+          email: storedUser?.email || undefined,
+        },
         (newBal) => {
           setBalance(newBal);
           saveLocalBalance(newBal).catch(() => {});
@@ -275,23 +258,10 @@ export default function UserWalletScreen() {
         await loadRecentTxns();
       }
     } catch {
-      Alert.alert("Error", "Payment may have succeeded. Pull to refresh.");
+      Alert.alert("Error", "Something went wrong. Please try again.");
     }
-  };
-
-  /** Called when user closes the WebView without completing payment */
-  const handlePaymentCancel = () => {
-    setShowPaymentWebView(false);
-    setPaymentUrl(null);
-  };
-
-  /** Watch WebView navigation — detect success page or redirect */
-  const handleWebViewNavigationChange = (navState: WebViewNavigation) => {
-    const url = navState.url || "";
-    // The checkout page shows "✅" and calls window.close() on success.
-    // We also detect if the title contains success indicators.
-    if (navState.title?.includes("added to wallet") || url.includes("status=success")) {
-      handlePaymentSuccess();
+    finally {
+      setLoading(false);
     }
   };
 
@@ -505,64 +475,6 @@ export default function UserWalletScreen() {
         </View>
       </Modal>
 
-      {/* ── IN-APP RAZORPAY PAYMENT WEBVIEW ── */}
-      <Modal
-        visible={showPaymentWebView}
-        animationType="slide"
-        onRequestClose={handlePaymentCancel}
-        statusBarTranslucent
-      >
-        <SafeAreaView style={styles.webViewContainer}>
-          {/* Header bar */}
-          <View style={styles.webViewHeader}>
-            <Pressable onPress={handlePaymentCancel} style={styles.webViewCloseBtn}>
-              <Ionicons name="close" size={22} color="#1f2433" />
-            </Pressable>
-            <View style={styles.webViewTitleWrap}>
-              <Ionicons name="lock-closed" size={12} color="#6f63ff" />
-              <Text style={styles.webViewTitle}>Secure Payment</Text>
-            </View>
-            <View style={{ width: 40 }} />
-          </View>
-
-          {/* WebView */}
-          {paymentUrl ? (
-            <WebView
-              ref={webViewRef}
-              source={{ uri: paymentUrl }}
-              style={styles.webView}
-              onNavigationStateChange={handleWebViewNavigationChange}
-              javaScriptEnabled
-              domStorageEnabled
-              startInLoadingState
-              renderLoading={() => (
-                <View style={styles.webViewLoading}>
-                  <ActivityIndicator size="large" color="#6f63ff" />
-                  <Text style={styles.webViewLoadingText}>Loading checkout...</Text>
-                </View>
-              )}
-              // Inject JS to detect when payment succeeds and post message
-              injectedJavaScript={`
-                (function() {
-                  var observer = new MutationObserver(function() {
-                    var statusBox = document.getElementById('statusBox');
-                    if (statusBox && statusBox.classList.contains('success')) {
-                      window.ReactNativeWebView.postMessage('PAYMENT_SUCCESS');
-                    }
-                  });
-                  observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-                })();
-                true;
-              `}
-              onMessage={(event) => {
-                if (event.nativeEvent.data === "PAYMENT_SUCCESS") {
-                  handlePaymentSuccess();
-                }
-              }}
-            />
-          ) : null}
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -907,62 +819,4 @@ const styles = StyleSheet.create({
   confirmBtn: { flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: "center", backgroundColor: "#4f46e5" },
   confirmBtnText: { fontSize: 15, fontWeight: "700", color: "#fff" },
   btnDisabled: { opacity: 0.6 },
-
-  // ── In-app WebView payment modal ───────────────────────────────────────
-  webViewContainer: {
-    flex: 1,
-    backgroundColor: "#f7f3ff",
-  },
-  webViewHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    shadowColor: "#b8aef0",
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 3,
-  },
-  webViewCloseBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#f2f0ff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  webViewTitleWrap: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  webViewTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#1f2433",
-  },
-  webView: {
-    flex: 1,
-  },
-  webViewLoading: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "#f7f3ff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  webViewLoadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#8a8fa5",
-  },
 });
