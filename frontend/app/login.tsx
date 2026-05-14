@@ -18,7 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { API_BASE_URL } from '../lib/api';
+import { API_BASE_URL, parseJsonResponse } from '../lib/api';
 import { saveOfflineSession, tryOfflineLogin, hasOfflineSession } from '../lib/offlineAuth';
 import type { AuthUser } from '../hooks/useAuth';
 
@@ -45,12 +45,27 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 12000);
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, password }),
+        signal: controller.signal,
       });
-      const data = await response.json();
+      clearTimeout(timeoutId);
+      const parsed = await parseJsonResponse(response);
+      const data = parsed.ok ? parsed.json : null;
+
+      if (!parsed.ok) {
+        Alert.alert(
+          'Cannot Connect',
+          parsed.raw.trim().startsWith('<')
+            ? `Server returned HTML instead of JSON.\n\nBackend URL: ${API_BASE_URL}`
+            : `Server returned an invalid response.\n\nBackend URL: ${API_BASE_URL}`
+        );
+        return;
+      }
       if (!response.ok) {
         Alert.alert('Login Failed', response.status === 401 ? 'Invalid phone number or password.' : data.error || 'Please try again');
         return;
@@ -88,9 +103,10 @@ export default function LoginScreen() {
         );
       } else if (offline.success === false && offline.reason === 'no_cache') {
         Alert.alert(
-          'No Internet Connection',
-          'You need an internet connection for your first login on this device. ' +
-          'Once logged in online, future logins will work offline too.'
+          'Cannot Connect',
+          `Cannot connect to server at ${API_BASE_URL}.\n\n` +
+          'You need an online login for your first sign-in on this device. ' +
+          "If you're already online, this usually means the app is pointing to the wrong backend URL or the backend is down."
         );
       } else {
         // wrong_credentials — cached hash didn't match
