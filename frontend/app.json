@@ -91,6 +91,14 @@
       }
     },
     "owner": "mujju-212",
-    "ios": {}
+    "ios": {
+      "infoPlist": {
+        "LSApplicationQueriesSchemes": [
+          "tez",
+          "phonepe",
+          "paytmmp"
+        ]
+      }
+    }
   }
 }

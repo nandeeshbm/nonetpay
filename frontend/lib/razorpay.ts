@@ -1,24 +1,94 @@
-import { API_BASE_URL, STORAGE_KEYS } from "./api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Linking from "expo-linking";
+import * as WebBrowser from "expo-web-browser";
+import { Platform } from "react-native";
+import { API_BASE_URL, STORAGE_KEYS, parseJsonResponse } from "./api";
 
+if (typeof (WebBrowser as any).maybeCompleteAuthSession === "function") {
+  (WebBrowser as any).maybeCompleteAuthSession();
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // Razorpay Payment Helper
 //
-// Flow (in-app WebView — no external browser):
+// Mobile flow:
 //  1. App calls createTopUpOrder(token, amount)
-//  2. Backend creates Razorpay order → returns checkoutUrl
-//  3. App opens checkoutUrl in an in-app WebView modal (wallet screen)
-//  4. User pays inside the app → backend checkout page verifies payment
-//  5. WebView detects success redirect → closes modal → balance updated
+//  2. Backend creates Razorpay order
+//  3. Native Razorpay SDK opens in-app checkout
+//  4. App verifies payment with backend and refreshes balance
+//
+// Web fallback:
+//  Uses the hosted checkout page + callback redirect flow.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type CreateOrderResult = {
   success: boolean;
   orderId?: string;
+  keyId?: string;
   checkoutUrl?: string;
   amount?: number;          // in paise
   error?: string;
 };
+
+type PaymentResult = {
+  opened: boolean;
+  newBalance?: number;
+  error?: string;
+};
+
+type RazorpayPrefill = {
+  name?: string;
+  email?: string;
+  contact?: string;
+};
+
+type NativePaymentSuccess = {
+  razorpay_payment_id: string;
+  razorpay_order_id?: string;
+  razorpay_signature?: string;
+};
+
+type NativePaymentError = {
+  code?: number;
+  description?: string;
+  source?: string;
+  step?: string;
+  reason?: string;
+  metadata?: {
+    order_id?: string;
+    payment_id?: string;
+    [key: string]: unknown;
+  };
+};
+
+function getNativeRazorpay():
+  | { open: (options: Record<string, unknown>) => Promise<NativePaymentSuccess> }
+  | null {
+  if (Platform.OS === "web") return null;
+  try {
+    // Keep this dynamic so web builds do not try to resolve a native-only module.
+    const nativeModule = require("react-native-razorpay");
+    const resolved = nativeModule?.default ?? nativeModule ?? null;
+    if (resolved && typeof resolved.open === "function") return resolved;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function formatPaymentError(error: unknown): string {
+  if (!error) return "Payment failed. Please try again.";
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message || "Payment failed. Please try again.";
+  const nativeError = error as NativePaymentError;
+  if (!nativeError) return "Payment failed. Please try again.";
+  if (nativeError.reason === "payment_cancelled") return "Payment cancelled";
+  const detail = [nativeError.reason, nativeError.step]
+    .filter(Boolean)
+    .map((value) => String(value).replace(/_/g, " "))
+    .join(" · ");
+  if (!nativeError.description) return detail ? `Payment failed (${detail})` : "Payment failed. Please try again.";
+  return detail ? `${nativeError.description} (${detail})` : nativeError.description;
+}
 
 export function normalizeCheckoutUrl(checkoutUrl: string): string {
   try {
@@ -35,6 +105,81 @@ export function normalizeCheckoutUrl(checkoutUrl: string): string {
     return checkout.toString();
   } catch {
     return checkoutUrl;
+  }
+}
+
+async function openHostedCheckout(checkoutUrl: string): Promise<PaymentResult> {
+  try {
+    const returnUrl = Linking.createURL("payment-callback");
+    const safeCheckoutUrl = normalizeCheckoutUrl(checkoutUrl);
+    let result: { type: string; url?: string } | null = null;
+    try {
+      result = await WebBrowser.openAuthSessionAsync(safeCheckoutUrl, returnUrl);
+    } catch (e: any) {
+      const message = typeof e?.message === "string" ? e.message : "";
+      if (message.toLowerCase().includes("auth") || message.toLowerCase().includes("session")) {
+        try {
+          await WebBrowser.openBrowserAsync(safeCheckoutUrl);
+          return { opened: true, error: "Checkout opened in browser. Complete payment, then return and refresh your balance." };
+        } catch (openErr: any) {
+          return { opened: false, error: openErr?.message || "Failed to open checkout" };
+        }
+      }
+      throw e;
+    }
+    if (result.type !== "success" || !result.url) {
+      return { opened: true, error: "Payment cancelled" };
+    }
+    const parsed = Linking.parse(result.url);
+    const status = typeof parsed.queryParams?.status === "string" ? parsed.queryParams.status : "";
+    const balanceRaw = parsed.queryParams?.balance;
+    const newBalance = typeof balanceRaw === "string" ? Number(balanceRaw) : undefined;
+    if (status !== "success") {
+      return { opened: true, error: "Payment cancelled" };
+    }
+    return { opened: true, newBalance: Number.isFinite(newBalance) ? newBalance : undefined };
+  } catch (error: any) {
+    return { opened: false, error: error?.message || "Failed to open checkout" };
+  }
+}
+
+async function verifyTopUpPayment(
+  token: string,
+  payment: NativePaymentSuccess,
+  amount: number
+): Promise<{ success: boolean; balance?: number; error?: string }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        razorpay_order_id: payment.razorpay_order_id,
+        razorpay_payment_id: payment.razorpay_payment_id,
+        razorpay_signature: payment.razorpay_signature,
+        amount,
+      }),
+    });
+
+    const parsed = await parseJsonResponse(response);
+    if (!parsed.ok) {
+      return { success: false, error: "Server returned an invalid response while verifying payment." };
+    }
+
+    const data = parsed.json ?? {};
+    if (!response.ok) {
+      return { success: false, error: data.error || "Payment verification failed" };
+    }
+
+    return {
+      success: Boolean(data.success),
+      balance: typeof data.balance === "number" ? data.balance : undefined,
+      error: data.success ? undefined : (data.error || "Payment verification failed"),
+    };
+  } catch {
+    return { success: false, error: "Network error while verifying payment." };
   }
 }
 
@@ -61,6 +206,7 @@ export async function createTopUpOrder(
     return {
       success: true,
       orderId: data.orderId,
+      keyId: data.keyId,
       checkoutUrl: data.checkoutUrl,
       amount: data.amount,
     };
@@ -128,5 +274,108 @@ export async function pollBalanceAfterPayment(
     message: newBalance !== null
       ? `₹${amount} added! New balance: ₹${newBalance}`
       : "Payment is being verified. Pull to refresh in a few seconds.",
+  };
+}
+
+export async function initiateTopUp(
+  token: string,
+  amount: number,
+  previousBalance: number,
+  prefill?: RazorpayPrefill,
+  onBalanceUpdate?: (balance: number) => void
+): Promise<{ success: boolean; message: string }> {
+  const returnUrl = Linking.createURL("payment-callback");
+  const orderResult = await createTopUpOrder(token, amount, returnUrl);
+
+  if (!orderResult.success || !orderResult.orderId || !orderResult.amount) {
+    return { success: false, message: orderResult.error || "Failed to create order" };
+  }
+
+  const nativeRazorpay = getNativeRazorpay();
+
+  if (nativeRazorpay && orderResult.keyId) {
+    try {
+      const payment = await nativeRazorpay.open({
+        key: orderResult.keyId,
+        amount: String(orderResult.amount),
+        currency: "INR",
+        name: "NONETPAY",
+        description: "Wallet Top-up",
+        order_id: orderResult.orderId,
+        prefill: {
+          name: prefill?.name,
+          email: prefill?.email,
+          contact: prefill?.contact,
+        },
+        notes: {
+          purpose: "wallet_topup",
+        },
+        theme: {
+          color: "#6f63ff",
+        },
+        modal: {
+          backdropclose: false,
+          confirm_close: true,
+        },
+      });
+
+      const verified = await verifyTopUpPayment(token, payment, amount);
+      if (!verified.success) {
+        return { success: false, message: verified.error || "Payment verification failed" };
+      }
+
+      const result = await pollBalanceAfterPayment(token, previousBalance, amount, onBalanceUpdate);
+      if (verified.balance !== undefined && onBalanceUpdate) {
+        onBalanceUpdate(verified.balance);
+      }
+
+      return {
+        success: true,
+        message:
+          verified.balance !== undefined
+            ? `₹${amount} added! New balance: ₹${verified.balance}`
+            : result.message,
+      };
+    } catch (error) {
+      if (orderResult.checkoutUrl) {
+        const checkout = await openHostedCheckout(orderResult.checkoutUrl);
+        if (checkout.error === "Payment cancelled") {
+          return { success: false, message: "Payment cancelled" };
+        }
+        if (!checkout.opened) {
+          return { success: false, message: checkout.error || formatPaymentError(error) };
+        }
+        const result = await pollBalanceAfterPayment(token, previousBalance, amount, onBalanceUpdate);
+        return result;
+      }
+      return { success: false, message: formatPaymentError(error) };
+    }
+  }
+
+  if (!orderResult.checkoutUrl) {
+    return { success: false, message: "Native checkout is unavailable and no hosted checkout URL was returned." };
+  }
+
+  const checkout = await openHostedCheckout(orderResult.checkoutUrl);
+  if (checkout.error === "Payment cancelled") {
+    return { success: false, message: "Payment cancelled" };
+  }
+  if (!checkout.opened) {
+    return { success: false, message: checkout.error || "Failed to open payment checkout" };
+  }
+
+  let newBalance = checkout.newBalance ?? null;
+  if (newBalance !== null && onBalanceUpdate) {
+    onBalanceUpdate(newBalance);
+  }
+
+  if (newBalance === null) {
+    const result = await pollBalanceAfterPayment(token, previousBalance, amount, onBalanceUpdate);
+    return result;
+  }
+
+  return {
+    success: true,
+    message: `₹${amount} added! New balance: ₹${newBalance}`,
   };
 }

@@ -37,6 +37,7 @@ const razorpay = new Razorpay({
 router.post("/payment/create-order", authMiddleware, async (req, res) => {
 	try {
 		const { amount, returnUrl } = req.body || {};
+		const keyId = process.env.RAZORPAY_KEY_ID || "rzp_test_REPLACE_ME";
 
 		if (!amount || typeof amount !== "number" || amount <= 0) {
 			return res.status(400).json({ error: "Invalid amount" });
@@ -66,8 +67,8 @@ router.post("/payment/create-order", authMiddleware, async (req, res) => {
 			orderId: order.id,
 			amount: order.amount,
 			currency: order.currency,
-			keyId: process.env.RAZORPAY_KEY_ID,
-			checkoutUrl: `${backendBase}/api/payment/checkout/${order.id}?keyId=${process.env.RAZORPAY_KEY_ID}&amount=${order.amount}&userId=${req.user.userId}&name=${encodeURIComponent("NONETPAY Wallet")}&returnUrl=${safeReturnUrl}`,
+			keyId,
+			checkoutUrl: `${backendBase}/api/payment/checkout/${order.id}?keyId=${encodeURIComponent(keyId)}&amount=${order.amount}&userId=${encodeURIComponent(req.user.userId)}&name=${encodeURIComponent("NONETPAY Wallet")}&returnUrl=${safeReturnUrl}`,
 		});
 	} catch (error) {
 		console.error("Create order error:", error);
