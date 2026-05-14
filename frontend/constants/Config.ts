@@ -4,10 +4,11 @@ import { Platform } from "react-native";
 // ─── App-wide constants ───────────────────────────────────────────────────────
 // Single source of truth — import from here instead of hardcoding values.
 
-// Backend URL — set EXPO_PUBLIC_API_URL in frontend/.env and switch it there.
+// Backend URL — set EXPO_PUBLIC_API_URL in frontend/.env to override.
 const configExtra = Constants.expoConfig?.extra as
   | { apiBaseUrl?: string }
   | undefined;
+const DEFAULT_API_BASE_URL = "https://nonetpay.onrender.com";
 const rawApiBaseUrl =
   process.env.EXPO_PUBLIC_API_URL?.trim() ||
   configExtra?.apiBaseUrl?.trim() ||
@@ -40,7 +41,7 @@ const deriveWebBaseUrl = (): string => {
 
 const resolveApiBaseUrl = (): string => {
   const webFallback = deriveWebBaseUrl();
-  if (!rawApiBaseUrl) return webFallback;
+  if (!rawApiBaseUrl) return webFallback || DEFAULT_API_BASE_URL;
   if (Platform.OS !== "web" || !webFallback) return rawApiBaseUrl;
 
   const envHost = getHostFromUrl(rawApiBaseUrl);
@@ -55,7 +56,7 @@ const resolveApiBaseUrl = (): string => {
 export const API_BASE_URL = normalizeUrl(resolveApiBaseUrl());
 export const HAS_API_BASE_URL = API_BASE_URL.length > 0;
 export const API_BASE_URL_HELP =
-  "Set EXPO_PUBLIC_API_URL in frontend/.env to switch between local and deployed backends.";
+  "Set EXPO_PUBLIC_API_URL in frontend/.env to override the default deployed backend.";
 
 // ─── Payment limits ───────────────────────────────────────────────────────────
 /** Maximum amount per single top-up transaction (₹) */

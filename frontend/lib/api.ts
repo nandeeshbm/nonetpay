@@ -4,10 +4,21 @@ import {
   notifyVoucherSynced,
 } from "./notifications";
 import { API_BASE_URL } from "../constants/Config";
+export { API_BASE_URL, API_BASE_URL_HELP, HAS_API_BASE_URL } from "../constants/Config";
 
 // ─── Backend URL ──────────────────────────────────────────────────────────────
 // Reads from the shared frontend config so every screen uses the same env value.
 export const BASE_URL = API_BASE_URL;
+
+export async function parseJsonResponse(response: Response): Promise<{ ok: boolean; json: any; raw: string }> {
+  const raw = await response.text();
+  try {
+    const json = raw ? JSON.parse(raw) : {};
+    return { ok: true, json, raw };
+  } catch {
+    return { ok: false, json: null, raw };
+  }
+}
 
 
 // ─── AsyncStorage keys ────────────────────────────────────────────────────────
